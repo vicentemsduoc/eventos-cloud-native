@@ -6,6 +6,8 @@ import com.cloudnative.eventos.model.Compra;
 import com.cloudnative.eventos.model.Evento;
 import com.cloudnative.eventos.repository.CompraRepository;
 import com.cloudnative.eventos.repository.EventoRepository;
+import com.cloudnative.eventos.service.ReporteService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -13,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -23,6 +26,7 @@ public class CompraController {
 
     private final CompraRepository compraRepository;
     private final EventoRepository eventoRepository;
+    private final ReporteService reporteService;
 
     // POST /compras → realiza una compra de entradas
     @PostMapping
@@ -45,7 +49,11 @@ public class CompraController {
         compra.setFechaCompra(LocalDateTime.now());
 
         Compra guardada = compraRepository.save(compra);
-
+        try {
+            String key = reporteService.generarYSubirResumen(guardada);
+        } catch (IOException e) {
+            throw new RuntimeException("Error al generar el resumen", e);
+        }
         // 4. Devolver el resumen
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(guardada));
     }
