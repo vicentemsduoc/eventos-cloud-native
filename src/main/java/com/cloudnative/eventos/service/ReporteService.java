@@ -5,29 +5,34 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 @RequiredArgsConstructor
 public class ReporteService {
 
     private final S3Service s3Service;
+    private static final String EFS_PATH = "/app/efs";
 
     public String generarYSubirResumen(Compra compra) throws IOException {
         String contenido = generarContenidoResumen(compra);
         String nombreArchivo = "resumen-compra-" + compra.getId() + ".txt";
 
-        // Convertir el texto en un MultipartFile en memoria
+        Path rutaEfs = Paths.get(EFS_PATH, nombreArchivo);
+        Files.writeString(rutaEfs, contenido, StandardCharsets.UTF_8);
+
         MultipartFile archivo = new InMemoryMultipartFile(
                 nombreArchivo,
                 nombreArchivo,
                 "text/plain",
                 contenido.getBytes(StandardCharsets.UTF_8));
 
-        // Carpeta = ID de la compra
-        return s3Service.uploadFile(compra.getId().toString(), archivo);
+        String carpetaS3 = "evento-" + compra.getEvento().getId() + "/compra-" + compra.getId();
+        return s3Service.uploadFile(carpetaS3, archivo);
     }
 
     private String generarContenidoResumen(Compra compra) {
@@ -51,7 +56,6 @@ public class ReporteService {
                 compra.getFechaCompra());
     }
 
-    // Clase interna para simular un MultipartFile desde bytes
     private static class InMemoryMultipartFile implements MultipartFile {
         private final String name;
         private final String originalFilename;
@@ -96,13 +100,13 @@ public class ReporteService {
         }
 
         @Override
-        public ByteArrayInputStream getInputStream() {
-            return new ByteArrayInputStream(content);
+        public java.io.InputStream getInputStream() {
+            return new java.io.ByteArrayInputStream(content);
         }
 
         @Override
         public void transferTo(java.io.File dest) throws IOException {
-            java.nio.file.Files.write(dest.toPath(), content);
+            Files.write(dest.toPath(), content);
         }
     }
 }
