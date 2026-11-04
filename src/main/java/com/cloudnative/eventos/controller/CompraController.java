@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/compras")
@@ -20,5 +22,10 @@ public class CompraController {
     public ResponseEntity<CompraResponse> comprarEntradas(@Valid @RequestBody CompraRequest request) {
         CompraResponse response = compraService.realizarCompra(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/estadisticas")
+    public ResponseEntity<Map<String, Object>> obtenerEstadisticas() {
+        return ResponseEntity.ok(compraService.obtenerEstadisticas());
     }
 }
