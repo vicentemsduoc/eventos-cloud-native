@@ -5,7 +5,10 @@ import com.cloudnative.eventos.dto.EventoResponse;
 import com.cloudnative.eventos.model.Evento;
 import com.cloudnative.eventos.repository.EventoRepository;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -39,5 +42,16 @@ public class EventoService {
         response.setFecha(evento.getFecha());
         response.setPrecio(evento.getPrecio());
         return response;
+    }
+
+    public EventoResponse actualizarEvento(Long id, EventoRequest request) {
+        Evento evento = eventoRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+
+        evento.setNombre(request.getNombre());
+        evento.setFecha(request.getFecha());
+        evento.setPrecio(request.getPrecio());
+
+        return toResponse(eventoRepository.save(evento));
     }
 }

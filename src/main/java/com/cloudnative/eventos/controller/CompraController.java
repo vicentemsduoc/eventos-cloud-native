@@ -28,6 +28,13 @@ public class CompraController {
     public ResponseEntity<Map<String, Object>> obtenerEstadisticas() {
         return ResponseEntity.ok(compraService.obtenerEstadisticas());
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CompraResponse> actualizarCompra(
+            @PathVariable Long id,
+            @Valid @RequestBody CompraRequest request) {
+        return ResponseEntity.ok(compraService.actualizarCompra(id, request));
+    }
 }
 
-//hola
+// hola

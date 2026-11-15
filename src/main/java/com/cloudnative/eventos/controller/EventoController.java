@@ -28,4 +28,11 @@ public class EventoController {
         EventoResponse response = eventoService.crearEvento(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<EventoResponse> actualizarEvento(
+            @PathVariable Long id,
+            @Valid @RequestBody EventoRequest request) {
+        return ResponseEntity.ok(eventoService.actualizarEvento(id, request));
+    }
 }

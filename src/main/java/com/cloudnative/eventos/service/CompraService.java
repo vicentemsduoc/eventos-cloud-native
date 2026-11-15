@@ -103,4 +103,19 @@ public class CompraService {
 
         return resultado;
     }
+
+    public CompraResponse actualizarCompra(Long id, CompraRequest request) {
+        Compra compra = compraRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Compra no encontrada"));
+
+        Evento evento = eventoRepository.findById(request.getEventoId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+
+        compra.setEvento(evento);
+        compra.setCantidad(request.getCantidad());
+        compra.setPrecioUnitario(evento.getPrecio());
+        compra.setPrecioTotal(evento.getPrecio().multiply(BigDecimal.valueOf(request.getCantidad())));
+
+        return toResponse(compraRepository.save(compra));
+    }
 }
