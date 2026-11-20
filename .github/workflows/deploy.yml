@@ -65,16 +65,20 @@ jobs:
       # 7. Desplegar en la EC2
       - name: Deploy to EC2
         run: |
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.USER_SERVER }}@${{ secrets.EC2_HOST }} << 'EOF'
-            # Login en Docker Hub desde la EC2
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ${{ secrets.USER_SERVER }}@${{ secrets.EC2_HOST }} << EOF
             echo ${{ secrets.DOCKERHUB_TOKEN }} | docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-
-            # Descargar la última imagen
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eventos-app:latest
-
-            # Detener y eliminar el contenedor anterior (si existe)
             docker stop eventos-app || true
             docker rm eventos-app || true
-
-            # Ejecutar el nuevo contenedor
-            docker 
+            docker run -d --name eventos-app \
+              -v /mnt/efs:/app/efs \
+              -p 8989:8989 \
+              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e AWS_SESSION_TOKEN=${{ secrets.AWS_SESSION_TOKEN }} \
+              -e DB_HOST=${{ secrets.DB_HOST }} \
+              -e DB_NAME=${{ secrets.DB_NAME }} \
+              -e DB_USERNAME=${{ secrets.DB_USERNAME }} \
+              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+              ${{ secrets.DOCKERHUB_USERNAME }}/eventos-app:latest
+          EOF
